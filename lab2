@@ -48,7 +48,7 @@ private slots:
 
             tableWidget->setItem(i, 0, new QTableWidgetItem(fileInfo.fileName()));
             tableWidget->setItem(i, 1, new QTableWidgetItem(QString("%1 x %2").arg(image.width()).arg(image.height())));
-            tableWidget->setItem(i, 2, new QTableWidgetItem(QString("%1 x %2").arg(resolutionX).arg(resolutionY))); // 显示四舍五入后的分辨率
+            tableWidget->setItem(i, 2, new QTableWidgetItem(QString("%1 x %2").arg(resolutionX).arg(resolutionY)));
             tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number(colorDepth))); 
             tableWidget->setItem(i, 4, new QTableWidgetItem(getCompressionType(filePath)));
         }
