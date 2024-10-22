@@ -1,1 +1,78 @@
+#include <QApplication>
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QTableWidget>
+#include <QPushButton>
+#include <QFileDialog>
+#include <QDir>
+#include <QFileInfo>
+#include <QImage>
+#include <QDebug>
+#include <cmath>
 
+class ImageInfoApp : public QWidget {
+public:
+    ImageInfoApp(QWidget *parent = nullptr) : QWidget(parent) {
+        QVBoxLayout *layout = new QVBoxLayout(this);
+        tableWidget = new QTableWidget(this);
+        tableWidget->setColumnCount(5);
+        tableWidget->setHorizontalHeaderLabels({"File Name", "Size (px)", "Resolution (DPI)", "Color Depth", "Compression"});
+
+        QPushButton *loadButton = new QPushButton("Load Images", this);
+        connect(loadButton, &QPushButton::clicked, this, &ImageInfoApp::loadImages);
+
+        layout->addWidget(loadButton);
+        layout->addWidget(tableWidget);
+        setLayout(layout);
+    }
+
+private slots:
+    void loadImages() {
+        QStringList fileNames = QFileDialog::getOpenFileNames(this, "Select Image Files", QString(), "Images (*.jpg *.jpeg *.png *.gif *.tif *.tiff *.bmp *.pcx)");
+        tableWidget->setRowCount(fileNames.size());
+
+        for (int i = 0; i < fileNames.size(); ++i) {
+            QString filePath = fileNames[i];
+            QFileInfo fileInfo(filePath);
+            QImage image(filePath);
+
+            if (image.isNull()) {
+                qDebug() << "Cannot read image:" << filePath;
+                continue;
+            }
+
+            int colorDepth = image.depth();
+
+            int resolutionX = std::round(image.dotsPerMeterX() * 0.0254); 
+            int resolutionY = std::round(image.dotsPerMeterY() * 0.0254);
+
+            tableWidget->setItem(i, 0, new QTableWidgetItem(fileInfo.fileName()));
+            tableWidget->setItem(i, 1, new QTableWidgetItem(QString("%1 x %2").arg(image.width()).arg(image.height())));
+            tableWidget->setItem(i, 2, new QTableWidgetItem(QString("%1 x %2").arg(resolutionX).arg(resolutionY))); // 显示四舍五入后的分辨率
+            tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number(colorDepth))); 
+            tableWidget->setItem(i, 4, new QTableWidgetItem(getCompressionType(filePath)));
+        }
+    }
+
+private:
+    QTableWidget *tableWidget;
+
+    QString getCompressionType(const QString &filePath) {
+        if (filePath.endsWith(".jpg") || filePath.endsWith(".jpeg")) return "JPEG";
+        if (filePath.endsWith(".png")) return "PNG (Lossless)";
+        if (filePath.endsWith(".gif")) return "GIF (Lossless)";
+        if (filePath.endsWith(".tif") || filePath.endsWith(".tiff")) return "TIFF (Lossless)";
+        if (filePath.endsWith(".bmp")) return "BMP (Lossless)";
+        if (filePath.endsWith(".pcx")) return "PCX (Lossless)";
+        return "Unknown";
+    }
+};
+
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+    ImageInfoApp window;
+    window.resize(800, 600);
+    window.setWindowTitle("Image Info Reader");
+    window.show();
+    return app.exec();
+}
